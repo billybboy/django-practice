@@ -1,4 +1,5 @@
-from django.shortcuts import render
+from django.urls import reverse
+from django.shortcuts import render, get_object_or_404
 from django.views.generic import(
     CreateView,
     DetailView,
@@ -7,6 +8,7 @@ from django.views.generic import(
     DeleteView
 )
 
+from .forms import ArticleModelForm
 from .models import Article
 
 # Create your views here.
@@ -15,21 +17,44 @@ class ArticleListView(ListView):
     queryset = Article.objects.all()
 
 
+class ArticleUpdateView(UpdateView):
+    template_name = 'articles/article_create.html'
+    form_class = ArticleModelForm
+    queryset = Article.objects.all()
 
-def article_create_view(request):
-    initial_data = {
-        'title': 'My this awesome title'
-    }
-    context = {
-        'form': form
-    }
-    return render(request, "blog/article_create.html", context) 
+    def get_object(self):
+        id_ = self.kwargs.get('id')
+        return get_object_or_404(Article, id=id_)
+    
+    def form_valid(self, form):
+        print(form.cleaned_data)
+        return super().form_valid(form)    
 
+class ArticleCreateView(CreateView):
+    form_class = ArticleModelForm
+    template_name = 'articles/article_create.html'
+    queryset = Article.objects.all()
+    success_url = '/'
 
-def article_detail_view(request):
-    obj = Article.objects.get(id=1)
-    context = {
-        'title': obj.title,
-        'content': obj.content
-    }
-    return render(request, "blog/article_details.html", context)
+    def form_valid(self, form):
+        print(form.cleaned_data)
+        return super().form_valid(form)
+
+class ArticleDetailView(DetailView):
+    template_name = 'articles/article_details.html'
+    #queryset = Article.objects.all()
+
+    def get_object(self):
+        id_ = self.kwargs.get('id')
+        return get_object_or_404(Article, id=id_)
+    
+class ArticleDeleteView(DeleteView):
+    template_name = 'articles/article_delete.html'
+    #queryset = Article.objects.all()
+
+    def get_object(self):
+        id_ = self.kwargs.get('id')
+        return get_object_or_404(Article, id=id_)
+    
+    def get_success_url(self):
+        return reverse('articles:article-list')
